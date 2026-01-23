@@ -1,0 +1,318 @@
+{
+	"info": {
+		"_postman_id": "fc255dd8-33c8-4f3c-ac0f-97a79a42cbb0",
+		"name": "test task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24524756"
+	},
+	"item": [
+		{
+			"name": "Работа с товарами",
+			"item": [
+				{
+					"name": "Обновить товар",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"id\": \"20864b0b-ac83-4e79-9d47-ab2af6a04615\",\n \"name\": \"Product1\",\n \"category\": \"VEGETABLES\",\n \"dictionary\": \"Ref12345\",\n \"price\": 99.99,\n \"qty\": 110\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/products",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"products"
+							]
+						},
+						"description": "Generated from cURL: curl --location --request PATCH 'http://localhost:8080/products' \\\n--header 'Content-Type: application/json' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89' \\\n--data '{\n \"id\": \"20864b0b-ac83-4e79-9d47-ab2af6a04615\",\n \"name\": \"Product1\",\n \"category\": \"VEGETABLES\",\n \"dictionary\": \"Ref12345\",\n \"price\": 99.99,\n \"qty\": 110\n}'"
+					},
+					"response": []
+				},
+				{
+					"name": "Создание товара",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=DD362337A72987523A13AD44E765BA03"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n \"name\": \"Product1\",\n \"article\": \"d290f1ee-6c54-4b01-90e6-d701748f0854\",\n \"category\": \"VEGETABLES\",\n \"dictionary\": \"Ref12345\",\n \"price\": 99.99,\n \"qty\": 10\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/products",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"products"
+							]
+						},
+						"description": "Generated from cURL: curl --location 'http://localhost:8080/products' \\\n--header 'Content-Type: application/json' \\\n--header 'Cookie: JSESSIONID=DD362337A72987523A13AD44E765BA03' \\\n--data '{\n \"name\": \"Product1\",\n \"article\": \"d290f1ee-6c54-4b01-90e6-d701748f0854\",\n \"category\": \"VEGETABLES\",\n \"dictionary\": \"Ref12345\",\n \"price\": 99.99,\n \"qty\": 10\n}'"
+					},
+					"response": []
+				},
+				{
+					"name": "Получить все товары",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/products",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"products"
+							]
+						},
+						"description": "Generated from cURL: curl --location 'http://localhost:8080/products' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89'"
+					},
+					"response": []
+				},
+				{
+					"name": "Получить товар по id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/products/bab5891e-94d1-45e5-8439-0ee616a34cf4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"products",
+								"bab5891e-94d1-45e5-8439-0ee616a34cf4"
+							]
+						},
+						"description": "Generated from cURL: curl --location 'http://localhost:8080/products/bab5891e-94d1-45e5-8439-0ee616a34cf4' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89'"
+					},
+					"response": []
+				},
+				{
+					"name": "Удалить товар по id",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/products/7492eb1c-c526-47ce-bcb4-06d8ca13a5bb",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"products",
+								"7492eb1c-c526-47ce-bcb4-06d8ca13a5bb"
+							]
+						},
+						"description": "Generated from cURL: curl --location --request DELETE 'http://localhost:8080/products/7492eb1c-c526-47ce-bcb4-06d8ca13a5bb' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89'"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Работа с заказами",
+			"item": [
+				{
+					"name": "Создание заказа",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "customer_id",
+								"value": "1"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "  {\n   \"deliveryAddress\": \"string\",\n   \"products\" : [\n     {\n       \"id\": \"df70f373-5376-4c88-8b96-fbe556aff1fd\",\n       \"qty\": 1\n     }\n   ]\n }\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/order",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order"
+							]
+						},
+						"description": "Generated from cURL: curl --location 'http://localhost:8080/order' \\\n--header 'customer_id: 1' \\\n--header 'Content-Type: application/json' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89' \\\n--data '  {\n   \"deliveryAddress\": \"string\",\n   \"products\" : [\n     {\n       \"id\": \"df70f373-5376-4c88-8b96-fbe556aff1fd\",\n       \"qty\": 1\n     }\n   ]\n }\n'\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Редактирование",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "customer_id",
+								"value": "1"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\"products\": [\n {\n  \"id\": \"20864b0b-ac83-4e79-9d47-ab2af6a04615\",\n  \"qty\": 2\n }\n]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/order/ac120002-96a1-116f-8196-a14b4aa60000",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"ac120002-96a1-116f-8196-a14b4aa60000"
+							]
+						},
+						"description": "Generated from cURL: curl --location --request PATCH 'http://localhost:8080/order/ac120002-96a1-116f-8196-a14b4aa60000' \\\n--header 'customer_id: 1' \\\n--header 'Content-Type: application/json' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89' \\\n--data '{\n\"products\": [\n {\n  \"id\": \"20864b0b-ac83-4e79-9d47-ab2af6a04615\",\n  \"qty\": 2\n }\n]\n}'"
+					},
+					"response": []
+				},
+				{
+					"name": "Удаление заказа",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "customer_id",
+								"value": "1"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=0061C10DFEB3654A954420AA3F665B89"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/order/ac120002-96a1-116f-8196-a14b4aa60000",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"ac120002-96a1-116f-8196-a14b4aa60000"
+							]
+						},
+						"description": "Generated from cURL: curl --location --request DELETE 'http://localhost:8080/order/ac120002-96a1-116f-8196-a14b4aa60000' \\\n--header 'customer_id: 1' \\\n--header 'Cookie: JSESSIONID=0061C10DFEB3654A954420AA3F665B89' \\\n--data ''"
+					},
+					"response": []
+				},
+				{
+					"name": "Получение заказа по id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "customer_id",
+								"value": "1"
+							},
+							{
+								"key": "Cookie",
+								"value": "JSESSIONID=44CFA99BC53028567B501EDBEE0C9CA3"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/order/ac120002-9715-1118-8197-501397670002",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"order",
+								"ac120002-9715-1118-8197-501397670002"
+							]
+						},
+						"description": "Generated from cURL: curl --location 'http://localhost:8080/order/ac120002-9715-1118-8197-501397670002' \\\n--header 'customer_id: 1' \\\n--header 'Cookie: JSESSIONID=44CFA99BC53028567B501EDBEE0C9CA3'"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

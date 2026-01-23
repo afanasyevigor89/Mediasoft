@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    implementation("io.rest-assured:rest-assured:6.0.0")
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.0-M1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:6.1.0-M1")
+    implementation("tools.jackson.core:jackson-databind:3.0.3")
+    testImplementation("org.assertj:assertj-core:4.0.0-M1")
+    testImplementation("io.qameta.allure:allure-junit5:2.32.0")
+    implementation("com.github.javafaker:javafaker:1.0.2")
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    compileOnly ("org.projectlombok:lombok:1.18.42")
+    annotationProcessor ("org.projectlombok:lombok:1.18.42")
+    testCompileOnly ("org.projectlombok:lombok:1.18.42")
+    testAnnotationProcessor ("org.projectlombok:lombok:1.18.42")
+}
+
+test {
+    useJUnitPlatform()
+}
