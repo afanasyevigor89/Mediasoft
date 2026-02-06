@@ -1,0 +1,75 @@
+package tests;
+
+import clients.UserAPI;
+import com.github.javafaker.Faker;
+import dot.CreatedProduct;
+import dot.NewProduct;
+import dot.ProductData;
+import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
+import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
+import io.restassured.response.Response;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
+import java.util.UUID;
+
+import static io.qameta.allure.Allure.step;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class GetProductByIdTest {
+    private final UserAPI userAPI = new UserAPI();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Faker faker = new Faker(Locale.ENGLISH);
+    private CreatedProduct createdProduct;
+
+    @BeforeEach
+    void setUp() throws JsonProcessingException {
+
+        NewProduct newProduct = new NewProduct.Builder()
+                .name(faker.food().vegetable())
+                .article(UUID.randomUUID())
+                .category("VEGETABLES")
+                .dictionary("vegetable")
+                .price(12.12)
+                .qty(1.12)
+                .build();
+        String requestBody = objectMapper.writeValueAsString(newProduct);
+        Response response = userAPI.createProduct(requestBody);
+
+        createdProduct = objectMapper.readValue(response.getBody().asString(), CreatedProduct.class);
+    }
+
+    @Test
+    void testGetProductById() throws JsonProcessingException {
+        Response response = userAPI.getProductById(createdProduct.getId());
+        ProductData productData = objectMapper.readValue(response.getBody().asString(), ProductData.class);
+
+        step("Проверка тела ответа", () -> {
+            assertAll(() -> {
+                assertEquals(200, response.getStatusCode());
+                assertNotNull(productData.getId());
+                assertEquals(productData.getName(), createdProduct.getName(), "Название товара указано неверно, ожидалось: " + createdProduct.getName());
+                assertEquals(productData.getCategory(), createdProduct.getCategory(), "Категория товара указана неверно, ожидалось: " + createdProduct.getCategory());
+                assertEquals(productData.getArticle(), createdProduct.getArticle().toString(), "Артикул товара указан неверно, ожидалось: " + createdProduct.getArticle());
+                assertEquals(productData.getPrice(), createdProduct.getPrice(), "Цена товара указана неверно, ожидалось: " + createdProduct.getPrice());
+                assertEquals(productData.getQty(), createdProduct.getQty(), "Кол-во товара указано неверно, ожидалось: " + createdProduct.getQty());
+                assertEquals(productData.getInsertedAt(), createdProduct.getInsertedAt(), "Дата создания товара указана неверно, ожидалось: " + createdProduct.getInsertedAt());
+                assertEquals(productData.getCurrency(), "RUB", "Цена товара указана неверно, ожидалось: " + createdProduct.getCurrency());
+            });
+        });
+    }
+
+    @Test
+    void testGetNotExistProduct() {
+        Response response = userAPI.getProductById(UUID.randomUUID());
+        assertEquals(400, response.getStatusCode());
+    }
+
+    @AfterEach
+    void tearDown() {
+        userAPI.deleteProduct(createdProduct.getId());
+    }
+
+}
