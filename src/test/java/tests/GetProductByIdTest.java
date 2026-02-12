@@ -2,16 +2,19 @@ package tests;
 
 import clients.UserAPI;
 import com.github.javafaker.Faker;
-import dot.CreatedProduct;
-import dot.NewProduct;
-import dot.ProductData;
+import dto.CreatedProduct;
+import dto.NewProduct;
+import dto.ProductData;
 import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import settings.Category;
+import settings.StatusCode;
 
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -27,13 +30,13 @@ public class GetProductByIdTest {
     @BeforeEach
     void setUp() throws JsonProcessingException {
 
-        NewProduct newProduct = new NewProduct.Builder()
+        NewProduct newProduct = NewProduct.builder()
                 .name(faker.food().vegetable())
                 .article(UUID.randomUUID())
-                .category("VEGETABLES")
+                .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(12.12)
-                .qty(1.12)
+                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 20) + ""))
                 .build();
         String requestBody = objectMapper.writeValueAsString(newProduct);
         Response response = userAPI.createProduct(requestBody);
@@ -48,7 +51,7 @@ public class GetProductByIdTest {
 
         step("Проверка тела ответа", () -> {
             assertAll(() -> {
-                assertEquals(200, response.getStatusCode());
+                assertEquals(StatusCode.OK.getCode(), response.getStatusCode());
                 assertNotNull(productData.getId());
                 assertEquals(productData.getName(), createdProduct.getName(), "Название товара указано неверно, ожидалось: " + createdProduct.getName());
                 assertEquals(productData.getCategory(), createdProduct.getCategory(), "Категория товара указана неверно, ожидалось: " + createdProduct.getCategory());
@@ -64,7 +67,7 @@ public class GetProductByIdTest {
     @Test
     void testGetNotExistProduct() {
         Response response = userAPI.getProductById(UUID.randomUUID());
-        assertEquals(400, response.getStatusCode());
+        assertEquals(StatusCode.BAD_REQUEST.getCode(), response.getStatusCode());
     }
 
     @AfterEach

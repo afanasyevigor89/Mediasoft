@@ -2,16 +2,19 @@ package tests;
 
 import clients.UserAPI;
 import com.github.javafaker.Faker;
-import dot.CreatedProduct;
-import dot.NewProduct;
+import dto.CreatedProduct;
+import dto.NewProduct;
 import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import settings.Category;
 import settings.DatabaseConnectionFactory;
+import settings.StatusCode;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -40,7 +43,7 @@ class CreateProductTest {
     @Test
     void testCreateNewFruits() throws JsonProcessingException {
 
-        NewProduct newProduct = createValidProduct("FRUITS", article);
+        NewProduct newProduct = createValidProduct(Category.FRUITS.getName(), article);
 
         String requestBody = objectMapper.writeValueAsString(newProduct);
         Response response = userAPI.createProduct(requestBody);
@@ -68,8 +71,8 @@ class CreateProductTest {
                     assertEquals(newProduct.getName(), rs.getString("name"));
                     assertEquals(newProduct.getArticle().toString(), rs.getString("article"));
                     assertEquals(newProduct.getCategory(), rs.getString("category"));
-                    assertEquals(newProduct.getPrice(), rs.getDouble("price"));
-                    assertEquals(newProduct.getQty(), rs.getDouble("qty"));
+                    assertEquals(newProduct.getPrice(), rs.getBigDecimal("price"));
+                    assertEquals(newProduct.getQty(), rs.getBigDecimal("qty"));
                     assertEquals(createdProduct.getInsertedAt(), rs.getTimestamp("inserted_at"));
                 }
             }
@@ -79,7 +82,7 @@ class CreateProductTest {
     @Test
     void testCreateNewVegetables() throws JsonProcessingException {
 
-        NewProduct newProduct = createValidProduct("VEGETABLES", article);
+        NewProduct newProduct = createValidProduct(Category.VEGETABLES.getName(), article);
 
         String requestBody = objectMapper.writeValueAsString(newProduct);
         Response response = userAPI.createProduct(requestBody);
@@ -111,7 +114,7 @@ class CreateProductTest {
 
 
         step("Проверяем статус код ответа", () -> {
-            assertEquals(400, response2.getStatusCode());
+            assertEquals(StatusCode.BAD_REQUEST.getCode(), response2.getStatusCode());
         });
     }
 
@@ -122,13 +125,13 @@ class CreateProductTest {
     }
 
     private NewProduct createValidProduct(String category, UUID article) {
-        return new NewProduct.Builder()
+        return NewProduct.builder()
                 .article(article)
                 .name(faker.food().fruit())
                 .category(category)
                 .dictionary("test dict")
-                .price(faker.number().numberBetween(1, 1000))
-                .qty(faker.number().numberBetween(1, 50))
+                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
     }
 }

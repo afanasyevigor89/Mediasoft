@@ -1,10 +1,11 @@
 package tests;
 
 import clients.UserAPI;
-import dot.ProductData;
+import dto.ProductData;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static io.qameta.allure.Allure.step;
@@ -25,8 +26,8 @@ public class GetProductListTest {
                     assertNotNull(product.getId(), "ID товара не может быть null, ID товара: " + product.getId());
                     assertNotNull(product.getArticle(), "Артикул товара не может быть null, ID товара: " + product.getId());
                     assertNotNull(product.getInsertedAt(), "Дата создания товара не может быть null, ID товара: " + product.getId());
-                    assertTrue(product.getPrice() > 0, "Цена товара должна быть больше 0, ID товара: " + product.getId());
-                    assertTrue(product.getQty() > 0, "Кол-во товара должно быть больше 0, ID товара: " + product.getId());});
+                    assertTrue(product.getPrice().compareTo(BigDecimal.ZERO) > 0,"Цена товара должна быть больше 0, ID товара: " + product.getId());
+                    assertTrue(product.getQty().compareTo(BigDecimal.ZERO) > 0, "Кол-во товара должно быть больше 0, ID товара: " + product.getId());});
             });
         });
     }

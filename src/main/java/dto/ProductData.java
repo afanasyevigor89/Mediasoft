@@ -1,9 +1,10 @@
-package dot;
+package dto;
 
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Date;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -12,9 +13,9 @@ public class ProductData {
     private String article;
     private String id;
     private String category;
-    private double price;
-    private double qty;
-    private Date insertedAt;
-    private Date last_qty_changed;
+    private BigDecimal price;
+    private BigDecimal qty;
+    private LocalDateTime insertedAt;
+    private LocalDateTime last_qty_changed;
     private String currency;
 }

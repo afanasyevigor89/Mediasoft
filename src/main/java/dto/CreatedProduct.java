@@ -1,8 +1,10 @@
-package dot;
+package dto;
 
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -13,9 +15,11 @@ public class CreatedProduct {
     private UUID article;
     private UUID id;
     private String category;
-    private double price;
-    private double qty;
+    private BigDecimal price;
+    private BigDecimal qty;
+
     private Date insertedAt;
     private Date last_qty_changed;
+
     private String currency;
 }

@@ -2,15 +2,18 @@ package tests;
 
 import clients.UserAPI;
 import com.github.javafaker.Faker;
-import dot.CreatedProduct;
-import dot.NewProduct;
+import dto.CreatedProduct;
+import dto.NewProduct;
 import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import settings.Category;
 import settings.DatabaseConnectionFactory;
+import settings.StatusCode;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +23,7 @@ import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
+import static settings.StatusCode.BAD_REQUEST;
 
 public class DeleteProductByIdTest {
     private final UserAPI userAPI = new UserAPI();
@@ -32,13 +36,13 @@ public class DeleteProductByIdTest {
     void setUp() throws JsonProcessingException, SQLException {
 
         dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
-        NewProduct newProduct = new NewProduct.Builder()
+        NewProduct newProduct = NewProduct.builder()
                 .name(faker.food().fruit())
                 .article(UUID.randomUUID())
-                .category("VEGETABLES")
+                .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(132.21)
-                .qty(143.34)
+                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
         String requestBody = objectMapper.writeValueAsString(newProduct);
         Response response = userAPI.createProduct(requestBody);
@@ -50,7 +54,7 @@ public class DeleteProductByIdTest {
     @Test
     void testDeleteProductById() {
         Response response = userAPI.deleteProduct(createdProduct.getId());
-        assertEquals(200, response.getStatusCode());
+        assertEquals(StatusCode.OK.getCode(), response.getStatusCode());
 
         step("Проверяем, что запись удалена из БД", () -> {
             String sql = "SELECT * FROM product WHERE id = ?";
@@ -67,6 +71,6 @@ public class DeleteProductByIdTest {
     @Test
     void testDeleteNotExistProduct() {
         Response response = userAPI.deleteProduct(UUID.randomUUID());
-        assertEquals(400, response.getStatusCode());
+        assertEquals(StatusCode.BAD_REQUEST.getCode(), response.getStatusCode());
     }
 }

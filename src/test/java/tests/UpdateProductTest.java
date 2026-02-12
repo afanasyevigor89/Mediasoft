@@ -2,19 +2,22 @@ package tests;
 
 import clients.UserAPI;
 import com.github.javafaker.Faker;
-import dot.CreatedProduct;
-import dot.NewProduct;
-import dot.ProductData;
-import dot.UpdateProduct;
+import dto.CreatedProduct;
+import dto.NewProduct;
+import dto.ProductData;
+import dto.UpdateProduct;
 import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import settings.Category;
 import settings.DatabaseConnectionFactory;
+import settings.StatusCode;
 
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,6 +28,7 @@ import java.util.UUID;
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static settings.Category.VEGETABLES;
 
 public class UpdateProductTest {
 
@@ -41,13 +45,13 @@ public class UpdateProductTest {
     void setUp() throws JsonProcessingException, SQLException {
         dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
 
-        NewProduct newProduct = new NewProduct.Builder()
+        NewProduct newProduct = NewProduct.builder()
                 .name(faker.food().vegetable())
                 .article(UUID.randomUUID())
-                .category("VEGETABLES")
+                .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(faker.number().numberBetween(0, 1000))
-                .qty(faker.number().numberBetween(0, 50))
+                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
 
         String requestBody = objectMapper.writeValueAsString(newProduct);
@@ -57,11 +61,11 @@ public class UpdateProductTest {
 
     @Test
     void testUpdateProduct() throws JsonProcessingException {
-        UpdateProduct updateProduct = new UpdateProduct.Builder()
+        UpdateProduct updateProduct = UpdateProduct.builder()
                 .id(createdProduct.getId())
                 .name("Carrot")
-                .price(120.12)
-                .qty(12.12)
+                .price(new BigDecimal("121.11"))
+                .qty(new BigDecimal("12.12"))
                 .build();
         String requestBody = objectMapper.writeValueAsString(updateProduct);
         Response response = userAPI.updateProduct(requestBody);
@@ -78,10 +82,10 @@ public class UpdateProductTest {
                     assertAll(() -> {
                         assertTrue(rs.next(), "Продукт не найден в БД");
                         assertEquals(updateProduct.getName(), rs.getString("name"));
-                        assertEquals(updateProduct.getPrice(), rs.getDouble("price"));
-                        assertEquals(updateProduct.getQty(), rs.getDouble("qty"));
-                        assertEquals(updateProduct.getInsertedAt(), rs.getTimestamp("inserted_at"));
-                        assertEquals(updateProduct.getLast_qty_changed(), rs.getTimestamp("last_qty_changed"));
+                        assertEquals(updateProduct.getPrice(), rs.getBigDecimal("price"));
+                        assertEquals(updateProduct.getQty(), rs.getBigDecimal("qty"));
+                        assertEquals(updateProduct.getInsertedAt(), rs.getTimestamp("inserted_at").toLocalDateTime());
+                        assertEquals(updateProduct.getLast_qty_changed(), rs.getTimestamp("last_qty_changed").toLocalDateTime());
                     });
                 }
             }
@@ -90,15 +94,15 @@ public class UpdateProductTest {
 
     @Test
     void testUpdateProductWithoutID() throws JsonProcessingException {
-        UpdateProduct updateProduct = new UpdateProduct.Builder()
+        UpdateProduct updateProduct = UpdateProduct.builder()
                 .name("Carrot")
-                .price(120.12)
-                .qty(12.12)
+                .price(new BigDecimal("121.11"))
+                .qty(new BigDecimal("12.12"))
                 .build();
         String requestBody = objectMapper.writeValueAsString(updateProduct);
         Response response = userAPI.updateProduct(requestBody);
 
-        assertEquals(400, response.getStatusCode());
+        assertEquals(StatusCode.BAD_REQUEST.getCode(), response.getStatusCode());
     }
 
     @AfterEach
