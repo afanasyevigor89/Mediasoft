@@ -18,8 +18,8 @@ public class CreatedProduct {
     private BigDecimal price;
     private BigDecimal qty;
 
-    private Date insertedAt;
-    private Date last_qty_changed;
+    private LocalDateTime insertedAt;
+    private LocalDateTime last_qty_changed;
 
     private String currency;
 }

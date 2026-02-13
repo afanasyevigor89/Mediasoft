@@ -26,6 +26,7 @@ public class UserAPI {
                 .when()
                 .post(usersPath + "/products")
                 .then()
+                .log().all()
                 .extract().response();
     }
 

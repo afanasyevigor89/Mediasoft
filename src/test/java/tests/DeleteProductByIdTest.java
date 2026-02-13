@@ -1,11 +1,11 @@
 package tests;
 
 import clients.UserAPI;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
-import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
-import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,25 +23,27 @@ import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
-import static settings.StatusCode.BAD_REQUEST;
 
 public class DeleteProductByIdTest {
     private final UserAPI userAPI = new UserAPI();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
     private Connection dbConnection;
     private CreatedProduct createdProduct;
 
     @BeforeEach
-    void setUp() throws JsonProcessingException, SQLException {
+    void setUp() throws  SQLException, com.fasterxml.jackson.core.JsonProcessingException {
 
         dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
+
         NewProduct newProduct = NewProduct.builder()
                 .name(faker.food().fruit())
                 .article(UUID.randomUUID())
                 .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
                 .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
         String requestBody = objectMapper.writeValueAsString(newProduct);

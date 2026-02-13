@@ -1,6 +1,8 @@
 package tests;
 
 import clients.UserAPI;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -15,10 +17,15 @@ import settings.DatabaseConnectionFactory;
 import settings.StatusCode;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -28,7 +35,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class CreateProductTest {
 
     private final UserAPI userAPI = new UserAPI();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
     private Connection dbConnection;
     UUID article = UUID.randomUUID();
@@ -41,7 +50,7 @@ class CreateProductTest {
     }
 
     @Test
-    void testCreateNewFruits() throws JsonProcessingException {
+    void testCreateNewFruits() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.FRUITS.getName(), article);
 
@@ -73,14 +82,15 @@ class CreateProductTest {
                     assertEquals(newProduct.getCategory(), rs.getString("category"));
                     assertEquals(newProduct.getPrice(), rs.getBigDecimal("price"));
                     assertEquals(newProduct.getQty(), rs.getBigDecimal("qty"));
-                    assertEquals(createdProduct.getInsertedAt(), rs.getTimestamp("inserted_at"));
+                    assertEquals(createdProduct.getInsertedAt(), rs.getObject("inserted_at", OffsetDateTime.class)
+                            .toLocalDateTime(), "Время создания продукта не совпадает");
                 }
             }
         });
     }
 
     @Test
-    void testCreateNewVegetables() throws JsonProcessingException {
+    void testCreateNewVegetables() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.VEGETABLES.getName(), article);
 
@@ -88,6 +98,7 @@ class CreateProductTest {
         Response response = userAPI.createProduct(requestBody);
 
         createdProduct = objectMapper.readValue(response.getBody().asString(), CreatedProduct.class);
+
 
         step("Проверяем поля в ответе", () -> {
             assertAll(() -> {
@@ -101,7 +112,7 @@ class CreateProductTest {
     }
 
     @Test
-    void testCreateProductWithDuplicateArticle() throws JsonProcessingException {
+    void testCreateProductWithDuplicateArticle() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
         UUID duplicateArticle = UUID.randomUUID();
         NewProduct newProduct = createValidProduct("FRUITS", duplicateArticle);
         String requestBody = objectMapper.writeValueAsString(newProduct);
@@ -130,7 +141,7 @@ class CreateProductTest {
                 .name(faker.food().fruit())
                 .category(category)
                 .dictionary("test dict")
-                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
                 .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
     }

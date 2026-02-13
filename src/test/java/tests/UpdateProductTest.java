@@ -1,6 +1,8 @@
 package tests;
 
 import clients.UserAPI;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -22,18 +24,20 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static settings.Category.VEGETABLES;
 
 public class UpdateProductTest {
 
     private final UserAPI userAPI = new UserAPI();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
     private CreatedProduct createdProduct;
     private Connection dbConnection;
@@ -42,7 +46,7 @@ public class UpdateProductTest {
     }
 
     @BeforeEach
-    void setUp() throws JsonProcessingException, SQLException {
+    void setUp() throws SQLException, com.fasterxml.jackson.core.JsonProcessingException {
         dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
 
         NewProduct newProduct = NewProduct.builder()
@@ -50,7 +54,7 @@ public class UpdateProductTest {
                 .article(UUID.randomUUID())
                 .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
+                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
                 .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
 
@@ -60,7 +64,7 @@ public class UpdateProductTest {
     }
 
     @Test
-    void testUpdateProduct() throws JsonProcessingException {
+    void testUpdateProduct() throws com.fasterxml.jackson.core.JsonProcessingException {
         UpdateProduct updateProduct = UpdateProduct.builder()
                 .id(createdProduct.getId())
                 .name("Carrot")
@@ -85,7 +89,8 @@ public class UpdateProductTest {
                         assertEquals(updateProduct.getPrice(), rs.getBigDecimal("price"));
                         assertEquals(updateProduct.getQty(), rs.getBigDecimal("qty"));
                         assertEquals(updateProduct.getInsertedAt(), rs.getTimestamp("inserted_at").toLocalDateTime());
-                        assertEquals(updateProduct.getLast_qty_changed(), rs.getTimestamp("last_qty_changed").toLocalDateTime());
+                        assertEquals(updateProduct.getLast_qty_changed(), rs.getObject("last_qty_changed", OffsetDateTime.class)
+                                .toLocalDateTime());
                     });
                 }
             }
@@ -93,7 +98,7 @@ public class UpdateProductTest {
     }
 
     @Test
-    void testUpdateProductWithoutID() throws JsonProcessingException {
+    void testUpdateProductWithoutID() throws com.fasterxml.jackson.core.JsonProcessingException {
         UpdateProduct updateProduct = UpdateProduct.builder()
                 .name("Carrot")
                 .price(new BigDecimal("121.11"))

@@ -1,6 +1,8 @@
 package tests;
 
 import clients.UserAPI;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.javafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -23,20 +25,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class GetProductByIdTest {
     private final UserAPI userAPI = new UserAPI();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    JsonMapper objectMapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
     private CreatedProduct createdProduct;
 
     @BeforeEach
-    void setUp() throws JsonProcessingException {
+    void setUp() throws com.fasterxml.jackson.core.JsonProcessingException {
 
         NewProduct newProduct = NewProduct.builder()
                 .name(faker.food().vegetable())
                 .article(UUID.randomUUID())
                 .category(Category.VEGETABLES.getName())
                 .dictionary("vegetable")
-                .price(new BigDecimal(faker.number().randomDouble(2, 1, 1000) + ""))
-                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 20) + ""))
+                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
                 .build();
         String requestBody = objectMapper.writeValueAsString(newProduct);
         Response response = userAPI.createProduct(requestBody);
@@ -45,7 +49,7 @@ public class GetProductByIdTest {
     }
 
     @Test
-    void testGetProductById() throws JsonProcessingException {
+    void testGetProductById() throws com.fasterxml.jackson.core.JsonProcessingException {
         Response response = userAPI.getProductById(createdProduct.getId());
         ProductData productData = objectMapper.readValue(response.getBody().asString(), ProductData.class);
 
@@ -59,7 +63,7 @@ public class GetProductByIdTest {
                 assertEquals(productData.getPrice(), createdProduct.getPrice(), "Цена товара указана неверно, ожидалось: " + createdProduct.getPrice());
                 assertEquals(productData.getQty(), createdProduct.getQty(), "Кол-во товара указано неверно, ожидалось: " + createdProduct.getQty());
                 assertEquals(productData.getInsertedAt(), createdProduct.getInsertedAt(), "Дата создания товара указана неверно, ожидалось: " + createdProduct.getInsertedAt());
-                assertEquals(productData.getCurrency(), "RUB", "Цена товара указана неверно, ожидалось: " + createdProduct.getCurrency());
+                assertEquals("RUB", productData.getCurrency(), "Валюта товара указана неверно, ожидалось: " + createdProduct.getCurrency());
             });
         });
     }
