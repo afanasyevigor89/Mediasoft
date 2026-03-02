@@ -44,3 +44,7 @@ bin/
 /pgdata
 /allure-results
 /.idea
+
+/pgdata
+/allure-results
+/.idea

@@ -1,38 +1,52 @@
 package tests;
 
+
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
+import entity.ProductsEntity;
 import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
-import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+import repository.ProductRepository;
+import settings.Application;
 import settings.Category;
 import settings.DatabaseConnectionFactory;
 import settings.StatusCode;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest(classes = Application.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:postgresql://localhost:5432/postgres_db",
+        "spring.datasource.username=postgres_user",
+        "spring.datasource.password=postgres_password",
+        "spring.datasource.driver-class-name=org.postgresql.Driver",
+        "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect",
+        "spring.jpa.hibernate.ddl-auto=create",
+        "spring.jpa.show-sql=true"
+})
 class CreateProductTest {
+
+    @Autowired
+    private ProductRepository productRepository;
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
@@ -70,22 +84,18 @@ class CreateProductTest {
         });
 
         step("Проверяем запись в БД", () -> {
-            String sql = "SELECT * FROM product WHERE id = ?";
-            try (PreparedStatement pstmt = dbConnection.prepareStatement(sql)) {
-                pstmt.setObject(1, createdProduct.getId(), java.sql.Types.OTHER);
+            ProductsEntity savedProduct = productRepository.findById(createdProduct.getId())
+                    .orElseThrow(() -> new AssertionError("Продукт не найден в БД"));
 
-                try (ResultSet rs = pstmt.executeQuery()) {
+            assertAll("Проверка данных в БД",
+                    () -> assertEquals(newProduct.getName(), savedProduct.getName()),
+                    () -> assertEquals(newProduct.getArticle(), savedProduct.getArticle()),
+                    () -> assertEquals(newProduct.getCategory(), savedProduct.getCategory()),
+                    () -> assertEquals(newProduct.getPrice(), savedProduct.getPrice()),
+                    () -> assertEquals(newProduct.getQty(), savedProduct.getQty()),
+                    () -> assertEquals(createdProduct.getInsertedAt(), savedProduct.getInsertedAt())
+            );
 
-                    assertTrue(rs.next(), "Продукт не найден в БД");
-                    assertEquals(newProduct.getName(), rs.getString("name"));
-                    assertEquals(newProduct.getArticle().toString(), rs.getString("article"));
-                    assertEquals(newProduct.getCategory(), rs.getString("category"));
-                    assertEquals(newProduct.getPrice(), rs.getBigDecimal("price"));
-                    assertEquals(newProduct.getQty(), rs.getBigDecimal("qty"));
-                    assertEquals(createdProduct.getInsertedAt(), rs.getObject("inserted_at", OffsetDateTime.class)
-                            .toLocalDateTime(), "Время создания продукта не совпадает");
-                }
-            }
         });
     }
 

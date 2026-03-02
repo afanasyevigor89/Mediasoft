@@ -3,7 +3,7 @@ package tests;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
 import io.restassured.response.Response;
