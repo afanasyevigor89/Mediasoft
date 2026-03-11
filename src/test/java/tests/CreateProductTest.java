@@ -37,10 +37,12 @@ import java.util.UUID;
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@SpringBootTest(classes = {HibernateConfig.class})
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CreateProductTest {
 
-
+    @Autowired
+    private ProductRepository productRepository;
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
@@ -77,7 +79,20 @@ class CreateProductTest {
             });
         });
 
+        step("Проверяем запись в БД", () -> {
+            ProductsEntity savedProduct = productRepository.findById(createdProduct.getId())
+                    .orElseThrow(() -> new AssertionError("Продукт не найден в БД"));
 
+            assertAll("Проверка данных в БД",
+                    () -> assertEquals(newProduct.getName(), savedProduct.getName()),
+                    () -> assertEquals(newProduct.getArticle(), savedProduct.getArticle()),
+                    () -> assertEquals(newProduct.getCategory(), savedProduct.getCategory()),
+                    () -> assertEquals(newProduct.getPrice(), savedProduct.getPrice()),
+                    () -> assertEquals(newProduct.getQty(), savedProduct.getQty()),
+                    () -> assertEquals(createdProduct.getInsertedAt(), savedProduct.getInsertedAt())
+            );
+
+        });
     }
 
     @Test
