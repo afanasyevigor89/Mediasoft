@@ -1,9 +1,12 @@
 package tests;
 
 
+import clients.HibernateConfig;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -14,11 +17,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.test.context.ContextConfiguration;
 import repository.ProductRepository;
-import settings.Application;
 import settings.Category;
 import settings.DatabaseConnectionFactory;
 import settings.StatusCode;
@@ -32,17 +37,8 @@ import java.util.UUID;
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = Application.class)
+@SpringBootTest(classes = {HibernateConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:postgresql://localhost:5432/postgres_db",
-        "spring.datasource.username=postgres_user",
-        "spring.datasource.password=postgres_password",
-        "spring.datasource.driver-class-name=org.postgresql.Driver",
-        "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect",
-        "spring.jpa.hibernate.ddl-auto=create",
-        "spring.jpa.show-sql=true"
-})
 class CreateProductTest {
 
     @Autowired
