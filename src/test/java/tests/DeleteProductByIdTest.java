@@ -4,7 +4,6 @@ import clients.HibernateConfig;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import entity.ProductsEntity;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -14,16 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import repository.ProductRepository;
+import service.ProductService;
 import settings.Category;
-import settings.DatabaseConnectionFactory;
 import settings.StatusCode;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -34,15 +28,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class DeleteProductByIdTest {
 
-    @Autowired
-    private ProductRepository productRepository;
-
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
             .addModule(new JavaTimeModule())
             .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
     private CreatedProduct createdProduct;
+
+    @Autowired
+    private ProductService productService;
 
     @BeforeEach
     void setUp() throws  com.fasterxml.jackson.core.JsonProcessingException {
@@ -68,8 +62,9 @@ public class DeleteProductByIdTest {
         assertEquals(StatusCode.OK.getCode(), response.getStatusCode());
 
         step("Проверяем, что запись удалена из БД", () -> {
-            boolean exists = productRepository.existsById(createdProduct.getId());
-            assertFalse(exists);
+            boolean result = productService.isProductDeleted(createdProduct.getId());
+            assertFalse(result, "Товар должен быть удален из БД");
+            
 
         });
     }

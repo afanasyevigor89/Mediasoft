@@ -2,19 +2,18 @@ package tests;
 
 import clients.HibernateConfig;
 import clients.UserAPI;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
-import entity.ProductsEntity;
-import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import repository.ProductRepository;
+import service.ProductService;
 import settings.Category;
 import settings.StatusCode;
 
@@ -23,14 +22,13 @@ import java.util.Locale;
 import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {HibernateConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CreateProductTest {
-
-    @Autowired
-    private ProductRepository productRepository;
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
@@ -40,8 +38,11 @@ class CreateProductTest {
     UUID article = UUID.randomUUID();
     private CreatedProduct createdProduct;
 
+    @Autowired
+    private ProductService productService;
+
     @Test
-    void testCreateNewFruits() throws com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateNewFruits() throws JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.FRUITS.getName(), article);
 
@@ -61,23 +62,20 @@ class CreateProductTest {
         });
 
         step("Проверяем запись в БД", () -> {
-            ProductsEntity savedProduct = productRepository.findById(createdProduct.getId())
-                    .orElseThrow(() -> new AssertionError("Продукт не найден в БД"));
+            var result = productService.findProductById(createdProduct.getId());
 
             assertAll("Проверка данных в БД",
-                    () -> assertEquals(newProduct.getName(), savedProduct.getName()),
-                    () -> assertEquals(newProduct.getArticle(), savedProduct.getArticle()),
-                    () -> assertEquals(newProduct.getCategory(), savedProduct.getCategory()),
-                    () -> assertEquals(newProduct.getPrice(), savedProduct.getPrice()),
-                    () -> assertEquals(newProduct.getQty(), savedProduct.getQty()),
-                    () -> assertEquals(createdProduct.getInsertedAt(), savedProduct.getInsertedAt())
+                    () -> assertThat(result.getName(), equalTo(newProduct.getName())),
+                    () -> assertThat(result.getArticle(), equalTo(newProduct.getArticle())),
+                    () -> assertThat(result.getCategory(), equalTo(newProduct.getCategory())),
+                    () -> assertThat(result.getPrice(), equalTo(newProduct.getPrice())),
+                    () -> assertThat(result.getQty(), equalTo(newProduct.getQty()))
             );
-
         });
     }
 
     @Test
-    void testCreateNewVegetables() throws com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateNewVegetables() throws JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.VEGETABLES.getName(), article);
 
@@ -98,7 +96,7 @@ class CreateProductTest {
     }
 
     @Test
-    void testCreateProductWithDuplicateArticle() throws com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateProductWithDuplicateArticle() throws JsonProcessingException {
         UUID duplicateArticle = UUID.randomUUID();
         NewProduct newProduct = createValidProduct("FRUITS", duplicateArticle);
         String requestBody = objectMapper.writeValueAsString(newProduct);

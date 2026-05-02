@@ -48,6 +48,7 @@ dependencies {
 
     // Allure
     testImplementation 'io.qameta.allure:allure-junit5:2.32.0'
+    implementation 'io.qameta.allure:allure-java-commons:2.32.0'
 
     // SLF4J (управляется Spring Boot)
     implementation 'org.slf4j:slf4j-api'

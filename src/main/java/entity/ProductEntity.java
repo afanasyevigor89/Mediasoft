@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -13,8 +14,8 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "product")
-public class ProductsEntity {
+@Table(name = "product", schema = "public")
+public class ProductEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -40,10 +41,10 @@ public class ProductsEntity {
     private BigDecimal qty;
 
     @Column(name = "inserted_at", nullable = false)
-    private LocalDateTime insertedAt;
+    private OffsetDateTime insertedAt;
 
     @Column(name = "last_qty_changed")
-    private LocalDateTime lastQtyChanged;
+    private OffsetDateTime lastQtyChanged;
 
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable;
