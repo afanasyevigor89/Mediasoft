@@ -30,4 +30,9 @@ public class ProductService {
     public ProductEntity findProductByArticle(UUID article) {
         return repository.findByArticle(article);
     }
+
+    @Step("Сохраняем продукт в таблицу " + TABLE)
+    public ProductEntity saveProduct(ProductEntity product) {
+        return repository.save(product);
+    }
 }

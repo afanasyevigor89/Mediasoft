@@ -36,8 +36,6 @@ public class UpdateProductTest {
     @Autowired
     private ProductService productService;
 
-    @Autowired
-    private ProductRepository productRepository;
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
@@ -58,10 +56,10 @@ public class UpdateProductTest {
                 .isAvailable(true)
                 .insertedAt(OffsetDateTime.now())
                 .build();
-        productRepository.save(createdProductEntity);
+        ProductEntity savedProductEntity = productService.saveProduct(createdProductEntity);
 
         UUID articleUuid = UUID.fromString("1e107b16-35dd-48d0-9b03-33f4dc1b8f9e");
-        ProductEntity savedProductEntity = productService.findProductByArticle(articleUuid);
+        productService.findProductByArticle(articleUuid);
 
         UpdateProduct updateProduct = UpdateProduct.builder()
                 .id(savedProductEntity.getId())
