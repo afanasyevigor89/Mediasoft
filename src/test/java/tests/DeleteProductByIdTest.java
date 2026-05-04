@@ -4,6 +4,7 @@ import clients.HibernateConfig;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import config.KafkaProducerConfig;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -24,7 +25,7 @@ import java.util.UUID;
 import static io.qameta.allure.Allure.step;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = {HibernateConfig.class})
+@SpringBootTest(classes = {HibernateConfig.class, KafkaProducerConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class DeleteProductByIdTest {
 

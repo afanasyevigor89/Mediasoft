@@ -5,6 +5,7 @@ import clients.UserAPI;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import config.KafkaProducerConfig;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
@@ -26,7 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = {HibernateConfig.class})
+@SpringBootTest(classes = {HibernateConfig.class, KafkaProducerConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CreateProductTest {
 
