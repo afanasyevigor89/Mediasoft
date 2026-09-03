@@ -4,6 +4,7 @@ import clients.HibernateConfig;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import config.KafkaProducerConfig;
 import entity.ProductEntity;
 import dto.ProductData;
 import dto.UpdateProduct;
@@ -29,7 +30,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(classes = {HibernateConfig.class})
+@SpringBootTest(classes = {HibernateConfig.class, KafkaProducerConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UpdateProductTest {
 
