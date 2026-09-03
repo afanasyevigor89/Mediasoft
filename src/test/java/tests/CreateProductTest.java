@@ -1,64 +1,48 @@
 package tests;
 
-
 import clients.HibernateConfig;
 import clients.UserAPI;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
 import net.datafaker.Faker;
 import dto.CreatedProduct;
 import dto.NewProduct;
-import entity.ProductsEntity;
-import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.test.context.ContextConfiguration;
-import repository.ProductRepository;
+import service.ProductService;
 import settings.Category;
-import settings.DatabaseConnectionFactory;
 import settings.StatusCode;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Locale;
 import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 
-
+@SpringBootTest(classes = {HibernateConfig.class})
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class CreateProductTest {
-
-
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
             .addModule(new JavaTimeModule())
             .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
-    private Connection dbConnection;
     UUID article = UUID.randomUUID();
     private CreatedProduct createdProduct;
 
-    @BeforeEach
-    void setUp() throws SQLException {
-
-        dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
-    }
+    @Autowired
+    private ProductService productService;
 
     @Test
-    void testCreateNewFruits() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateNewFruits() throws JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.FRUITS.getName(), article);
 
@@ -77,11 +61,21 @@ class CreateProductTest {
             });
         });
 
+        step("Проверяем запись в БД", () -> {
+            var result = productService.findProductById(createdProduct.getId());
 
+            assertAll("Проверка данных в БД",
+                    () -> assertThat(result.getName(), equalTo(newProduct.getName())),
+                    () -> assertThat(result.getArticle(), equalTo(newProduct.getArticle())),
+                    () -> assertThat(result.getCategory(), equalTo(newProduct.getCategory())),
+                    () -> assertThat(result.getPrice(), equalTo(newProduct.getPrice())),
+                    () -> assertThat(result.getQty(), equalTo(newProduct.getQty()))
+            );
+        });
     }
 
     @Test
-    void testCreateNewVegetables() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateNewVegetables() throws JsonProcessingException {
 
         NewProduct newProduct = createValidProduct(Category.VEGETABLES.getName(), article);
 
@@ -89,7 +83,6 @@ class CreateProductTest {
         Response response = userAPI.createProduct(requestBody);
 
         createdProduct = objectMapper.readValue(response.getBody().asString(), CreatedProduct.class);
-
 
         step("Проверяем поля в ответе", () -> {
             assertAll(() -> {
@@ -103,7 +96,7 @@ class CreateProductTest {
     }
 
     @Test
-    void testCreateProductWithDuplicateArticle() throws JsonProcessingException, com.fasterxml.jackson.core.JsonProcessingException {
+    void testCreateProductWithDuplicateArticle() throws JsonProcessingException {
         UUID duplicateArticle = UUID.randomUUID();
         NewProduct newProduct = createValidProduct("FRUITS", duplicateArticle);
         String requestBody = objectMapper.writeValueAsString(newProduct);
@@ -118,12 +111,6 @@ class CreateProductTest {
         step("Проверяем статус код ответа", () -> {
             assertEquals(StatusCode.BAD_REQUEST.getCode(), response2.getStatusCode());
         });
-    }
-
-    @AfterEach
-    void tearDown() throws SQLException {
-        dbConnection.close();
-        userAPI.deleteProduct(createdProduct.getId());
     }
 
     private NewProduct createValidProduct(String category, UUID article) {

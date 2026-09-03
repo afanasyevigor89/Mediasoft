@@ -1,72 +1,68 @@
 package tests;
 
+import clients.HibernateConfig;
 import clients.UserAPI;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import net.datafaker.Faker;
-import dto.CreatedProduct;
-import dto.NewProduct;
+import entity.ProductEntity;
 import dto.ProductData;
 import dto.UpdateProduct;
-import io.qameta.allure.internal.shadowed.jackson.core.JsonProcessingException;
-import io.qameta.allure.internal.shadowed.jackson.databind.ObjectMapper;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import net.datafaker.Faker;
 import org.junit.jupiter.api.Test;
-import settings.Category;
-import settings.DatabaseConnectionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import repository.ProductRepository;
+import service.ProductService;
 import settings.StatusCode;
 
-
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.UUID;
 
 import static io.qameta.allure.Allure.step;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SpringBootTest(classes = {HibernateConfig.class})
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UpdateProductTest {
+
+    @Autowired
+    private ProductService productService;
+
 
     private final UserAPI userAPI = new UserAPI();
     JsonMapper objectMapper = JsonMapper.builder()
             .addModule(new JavaTimeModule())
             .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
-    private CreatedProduct createdProduct;
-    private Connection dbConnection;
-
-    public UpdateProductTest() {
-    }
-
-    @BeforeEach
-    void setUp() throws SQLException, com.fasterxml.jackson.core.JsonProcessingException {
-        dbConnection = DatabaseConnectionFactory.getConnectionWithTransaction();
-
-        NewProduct newProduct = NewProduct.builder()
-                .name(faker.food().vegetable())
-                .article(UUID.randomUUID())
-                .category(Category.VEGETABLES.getName())
-                .dictionary("vegetable")
-                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
-                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
-                .build();
-
-        String requestBody = objectMapper.writeValueAsString(newProduct);
-        Response response = userAPI.createProduct(requestBody);
-        createdProduct = objectMapper.readValue(response.getBody().asString(), CreatedProduct.class);
-    }
 
     @Test
     void testUpdateProduct() throws com.fasterxml.jackson.core.JsonProcessingException {
+
+        ProductEntity createdProductEntity = ProductEntity.builder()
+                .name(faker.food().vegetable())
+                .article(UUID.fromString("1e107b16-35dd-48d0-9b03-33f4dc1b8f9e"))
+                .category("VEGETABLES")
+                .dictionary("vegetable")
+                .price(new BigDecimal(faker.commerce().price(1,1000).replace(",", ".")))
+                .qty(new BigDecimal(faker.number().randomDouble(2, 1, 50) + ""))
+                .isAvailable(true)
+                .insertedAt(OffsetDateTime.now())
+                .build();
+        ProductEntity savedProductEntity = productService.saveProduct(createdProductEntity);
+
+        UUID articleUuid = UUID.fromString("1e107b16-35dd-48d0-9b03-33f4dc1b8f9e");
+        productService.findProductByArticle(articleUuid);
+
         UpdateProduct updateProduct = UpdateProduct.builder()
-                .id(createdProduct.getId())
+                .id(savedProductEntity.getId())
                 .name("Carrot")
                 .price(new BigDecimal("121.11"))
                 .qty(new BigDecimal("12.12"))
@@ -77,23 +73,19 @@ public class UpdateProductTest {
         assertNotNull(productData.getLast_qty_changed(), "Дата изменения кол-ва должна быть заполнена");
 
         step("Проверяем запись в БД", () -> {
-            String sql = "SELECT * FROM product WHERE id = ?";
-            try (PreparedStatement pstmt = dbConnection.prepareStatement(sql)) {
-                pstmt.setObject(1, createdProduct.getId(), java.sql.Types.OTHER);
+            var result = productService.findProductById(createdProductEntity.getId());
 
-                try (ResultSet rs = pstmt.executeQuery()) {
+            assertAll("Проверка данных в БД",
+                    () -> assertThat(result.getName(), equalTo(updateProduct.getName())),
+                    () -> assertThat(result.getArticle(), equalTo(UUID.fromString("1e107b16-35dd-48d0-9b03-33f4dc1b8f9e"))),
+                    () -> assertThat(result.getCategory(), equalTo("VEGETABLES")),
+                    () -> assertThat(result.getPrice(), equalTo(updateProduct.getPrice())),
+                    () -> assertThat(result.getQty(), equalTo(updateProduct.getQty()))
+            );
 
-                    assertAll(() -> {
-                        assertTrue(rs.next(), "Продукт не найден в БД");
-                        assertEquals(updateProduct.getName(), rs.getString("name"));
-                        assertEquals(updateProduct.getPrice(), rs.getBigDecimal("price"));
-                        assertEquals(updateProduct.getQty(), rs.getBigDecimal("qty"));
-                        assertEquals(updateProduct.getInsertedAt(), rs.getTimestamp("inserted_at").toLocalDateTime());
-                        assertEquals(updateProduct.getLast_qty_changed(), rs.getObject("last_qty_changed", OffsetDateTime.class)
-                                .toLocalDateTime());
-                    });
-                }
-            }
+        });
+        step("Удаляем созданный продукт", () -> {
+            userAPI.deleteProduct(savedProductEntity.getId());
         });
     }
 
@@ -108,11 +100,5 @@ public class UpdateProductTest {
         Response response = userAPI.updateProduct(requestBody);
 
         assertEquals(StatusCode.BAD_REQUEST.getCode(), response.getStatusCode());
-    }
-
-    @AfterEach
-    void tearDown() throws SQLException {
-        dbConnection.close();
-        userAPI.deleteProduct(createdProduct.getId());
     }
 }
