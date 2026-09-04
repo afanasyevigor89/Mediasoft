@@ -82,4 +82,7 @@ dependencyManagement {
 
 test {
     useJUnitPlatform()
+    maxParallelForks = 4
+    forkEvery = 1
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
 }
