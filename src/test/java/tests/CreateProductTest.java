@@ -11,9 +11,13 @@ import dto.CreatedProduct;
 import dto.NewProduct;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 import service.ProductService;
 import settings.Category;
 import settings.StatusCode;
@@ -29,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = {HibernateConfig.class, KafkaProducerConfig.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Execution(ExecutionMode.CONCURRENT)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CreateProductTest {
 
     private final UserAPI userAPI = new UserAPI();
@@ -36,14 +42,16 @@ class CreateProductTest {
             .addModule(new JavaTimeModule())
             .build();
     private final Faker faker = new Faker(Locale.ENGLISH);
-    UUID article = UUID.randomUUID();
-    private CreatedProduct createdProduct;
 
     @Autowired
     private ProductService productService;
 
     @Test
+    @Transactional
     void testCreateNewFruits() throws JsonProcessingException {
+
+        UUID article = UUID.randomUUID();
+        CreatedProduct createdProduct;
 
         NewProduct newProduct = createValidProduct(Category.FRUITS.getName(), article);
 
@@ -76,7 +84,11 @@ class CreateProductTest {
     }
 
     @Test
+    @Transactional
     void testCreateNewVegetables() throws JsonProcessingException {
+
+        UUID article = UUID.randomUUID();
+        CreatedProduct createdProduct;
 
         NewProduct newProduct = createValidProduct(Category.VEGETABLES.getName(), article);
 
@@ -97,7 +109,11 @@ class CreateProductTest {
     }
 
     @Test
+    @Transactional
     void testCreateProductWithDuplicateArticle() throws JsonProcessingException {
+
+        UUID article = UUID.randomUUID();
+        CreatedProduct createdProduct;
         UUID duplicateArticle = UUID.randomUUID();
         NewProduct newProduct = createValidProduct("FRUITS", duplicateArticle);
         String requestBody = objectMapper.writeValueAsString(newProduct);
